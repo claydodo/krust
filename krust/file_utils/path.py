@@ -3,25 +3,36 @@
 import six
 import os
 import sys
+import re
+import warnings
 
 
 __all__ = [
     'P',
-    'PWD', 'DIRNAME', 'BASENAME', 'add_slash',
+    'PWD', 'DIRNAME', 'BASENAME', 'ensure_slash', 'add_slash',
     'CD',
     'get_rel_path', 'find_link_orig',
-    'get_ext', 'strip_ext', 'sub_ext'
+    'get_ext', 'strip_ext', 'sub_ext',
+    'is_glob', 'is_hidden', 'is_file', 'is_dir', 'is_link',
 ]
 
+
+# status: done
 def P(path):
     """expand ~ and $ in the path"""
-    return os.path.expanduser(os.path.expandvars(path))
+    if path is None:
+        return None
+    else:
+        return os.path.expanduser(os.path.expandvars(path))
 
 
+# status: done
 def PWD():
+    """Get current dir, as pwd in shell"""
     return os.getcwdu()
 
 
+# status: usable
 def DIRNAME(fname=None, absolute=False):
     if fname is None:
         fname = sys.modules['__main__'].__dict__['__file__']
@@ -32,14 +43,22 @@ def DIRNAME(fname=None, absolute=False):
         return os.path.dirname(fname)
 
 
+# status: done
 BASENAME = os.path.basename
 
 
-def add_slash(path):
+# status: done
+def ensure_slash(path):
     """Add a slash to the end of path if not exist."""
     return path.rstrip('/') + '/'
 
 
+# status: deprecated
+def add_slash(path):
+    warnings.warn("Deprecated, use ensure_slash(path) instead.", DeprecationWarning)
+
+
+# status: done
 def CD(path=None):
     """CD changes dir
     """
@@ -47,11 +66,12 @@ def CD(path=None):
         path = P('~')
     else:
         path = P(path)
-    if path == '':
+    if path == '':  # For certain reason, only None is treated as "go to home folder", while "" is treated as no-op.
         return
     return os.chdir(path)
 
 
+# status: done
 def get_rel_path(path, base):
     """get relative path, e.g., get_rel_path('abc/de/fg', 'abc') => 'de/fg'
     """
@@ -66,6 +86,7 @@ def get_rel_path(path, base):
     return rel_path
 
 
+# status: done
 def find_link_orig(path, max_depth=99):
     """Try to find the orig of a link."""
     count = 0
@@ -78,19 +99,59 @@ def find_link_orig(path, max_depth=99):
     return path
 
 
+# status: done
 def get_ext(path):
     """get .ext from a path"""
     return os.path.splitext(path)[1]
 
 
+# status: done
 def strip_ext(path):
     """strips .ext from a path"""
     return os.path.splitext(path)[0]
 
 
+# status: done
 def sub_ext(orig, new_ext):
     """sub .ext with a new one"""
     if not new_ext.startswith('.'):
         new_ext = '.' + new_ext
     return strip_ext(orig) + new_ext
 
+
+# status: done
+def is_glob(path):
+    if not isinstance(path, six.string_types):
+        return False
+
+    return '*' in path or '?' in path or re.match(r'.*\[.+\].*', path) is not None
+
+
+# status: need refine and add Windows support.
+def is_hidden(path):
+    if path in ['.', '..', './', '../']:
+        return False
+
+    return path.startswith('.') or path.endswith('~')
+
+
+def is_file(path, followlinks=True):
+    if os.path.isfile(path):
+        return True
+    elif os.path.islink(path) and followlinks:
+        return os.path.isfile(find_link_orig(path))
+    else:
+        return False
+
+
+def is_dir(path, followlinks=True):
+    if os.path.isdir(path):
+        return True
+    elif os.path.islink(path) and followlinks:
+        return os.path.isdir(find_link_orig(path))
+    else:
+        return False
+
+
+def is_link(path):
+    return os.path.islink(path)

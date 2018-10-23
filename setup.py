@@ -8,7 +8,7 @@ import setuptools
 
 setuptools.setup(
     name="krust",
-    version="0.0.2",
+    version="0.0.5",
     author="claydodo and his little friends (xiao huo ban)",
     author_email="claydodo@foxmail.com",
     description="Shell utils",
@@ -21,4 +21,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3 ",
         "Operating System :: OS Independent",
     ),
+    install_requires=[
+        'krux >= 0.0.10'
+    ]
 )
