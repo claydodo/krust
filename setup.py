@@ -8,7 +8,7 @@ import setuptools
 
 setuptools.setup(
     name="krust",
-    version="0.0.5",
+    version="0.0.7",
     author="claydodo and his little friends (xiao huo ban)",
     author_email="claydodo@foxmail.com",
     description="Shell utils",

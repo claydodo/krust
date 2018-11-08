@@ -5,7 +5,7 @@ import os
 import re
 
 import glob
-from .path import P, is_glob, is_hidden, is_file, is_dir, ensure_slash
+from krust.file_utils.path import P, is_glob, is_hidden, is_file, is_dir, ensure_slash
 from krux.regex import grep, simple_pattern_to_regex
 from krux.converters.string_related import dict2str
 
