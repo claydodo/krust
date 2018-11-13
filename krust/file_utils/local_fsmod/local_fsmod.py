@@ -10,9 +10,10 @@ from krux.converters.string_related import dict2str
 
 from ..fsmod import FSMod
 from ..path import *
-from .utils import *
 from .list_file import *
-
+from .copy_file import *
+from .mkdir import MKDIR
+from .rm import RM
 
 __all__ = ['LocalFSMod']
 
@@ -33,45 +34,32 @@ class LocalFSMod(FSMod):
     def exists(self, path):
         return os.path.exists(path)
 
-    def mkdir(self, dir_path, force=False):
-        #TODO: make it more robust
-        if dir_path in ['', '.', '..', './', '../', '/']:
-            return
-        orig = dir_path
-        if is_link(orig):
-            orig = find_link_orig(dir_path)
-        if is_file(orig):
-            if not force:
-                raise RuntimeError('Cannot makedir: %s is file' % dir_path)
-        if force:
-            try:
-                self.rm(dir_path)
-            except Exception as e:
-                pass
-        try:
-            os.makedirs(dir_path)
-        except OSError as e:
-            if e.errno != 17:
-                raise e
+    def mkdir(self, dir_path, **kwargs):
+        return MKDIR(dir_path, **kwargs)
 
     def rm(self, path):
-        if path in ['/', '/*']:
-            return
+        return RM(path)
 
-        fnames = glob.glob(path)
-        for fn in fnames:
-            try:
-                self._rm_one_file(fn)
-            except Exception as e:
-                six.print_(e)
+    def cp(self, src, dest):
+        return CP(src, dest)
 
-    def _rm_one_file(self, path):
-        if is_link(path):
-            os.unlink(path)
-        elif is_dir(path):
-            shutil.rmtree(path)
+    def mv(self, src, dest):
+        return shutil.move(src, dest)
+
+    def ln(self, src, dest):
+        src = P(src)
+        dest = P(dest)
+        both_dirs = src.endswith('/') and dest.endswith('/')
+        if src != '/':
+            src = src.rstrip('/')
+        if not both_dirs and (dest.endswith('/') or os.path.isdir(dest)):
+            true_dest = os.path.join(dest, BASENAME(src))
         else:
-            os.remove(path)
+            true_dest = dest.rstrip('/')
+        MKDIR(DIRNAME(true_dest))
+        if os.path.exists(true_dest):
+            RM(true_dest)
+        os.symlink(src, true_dest)
 
     def du(self, path):
         """disk usage

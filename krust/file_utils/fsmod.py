@@ -19,6 +19,12 @@ class FSMod(object):
     def ls(self, root, **kwargs):
         raise NotImplementedError
 
+    def ls_grep(self, root=None, pattern=None, **kwargs):
+        pass
+
+    def ls_group(self, root=None, pattern=None, **kwargs):
+        pass
+
     def exists(self, path):
         raise NotImplementedError
 
@@ -39,9 +45,3 @@ class FSMod(object):
 
     def du(self, path):
         raise NotImplementedError
-
-    def ls_grep(self, root=None, pattern=None, **kwargs):
-        pass
-
-    def ls_group(self, root=None, pattern=None, **kwargs):
-        pass
